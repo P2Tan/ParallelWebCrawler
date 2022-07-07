@@ -13,6 +13,7 @@ import com.udacity.webcrawler.profiler.ProfilerModule;
 import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -35,9 +36,12 @@ public final class  WebCrawlerMain {
     Guice.createInjector(new WebCrawlerModule(config), new ProfilerModule()).injectMembers(this);
 
     CrawlResult result = crawler.crawl(config.getStartPages());
+    //System.out.print((result.toString()));
     CrawlResultWriter resultWriter = new CrawlResultWriter(result);
-    if(config.getResultPath().equals("")){
-      System.out.print(config.getResultPath());
+    if(config.getResultPath().isEmpty()){
+      Writer writer = new PrintWriter(System.out);
+      resultWriter.write(writer);
+      writer.flush();
     }else{
       Path path = Path.of(config.getResultPath());
       resultWriter.write(path);
@@ -51,6 +55,7 @@ public final class  WebCrawlerMain {
       System.out.println("Usage: WebCrawlerMain [starting-url]");
       return;
     }
+   // String myPath = "src/main/config/sample_config_sequential.json";
 
     CrawlerConfiguration config = new ConfigurationLoader(Path.of(args[0])).load();
     new WebCrawlerMain(config).run();
