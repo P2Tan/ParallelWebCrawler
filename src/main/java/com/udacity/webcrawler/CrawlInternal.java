@@ -8,9 +8,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.RecursiveTask;
 import java.util.regex.Pattern;
 
-public class CrawlInternal extends RecursiveAction {
+public class CrawlInternal extends RecursiveTask<List> {
     private Set<String> visitedUrls;
     private Instant deadline;
     private Clock clock;
@@ -34,18 +35,18 @@ public class CrawlInternal extends RecursiveAction {
         this.maxDepth = maxDepth;
     }
     @Override
-    protected void compute() {
+    protected List compute() {
         Set<String> visitedUrls = new HashSet<>();
         if (maxDepth == 0 || clock.instant().isAfter(deadline)) {
-            return;
+            return (List) counts;
         }
         for (Pattern pattern : ignoredUrls) {
             if (pattern.matcher(url).matches()) {
-                return;
+                return (List) counts;
             }
         }
         if (visitedUrls.contains(url)) {
-            return;
+            return (List) counts;
         }
         visitedUrls.add(url);
         PageParser.Result result = parserFactory.get(url).parse();
@@ -56,9 +57,11 @@ public class CrawlInternal extends RecursiveAction {
                 counts.put(e.getKey(), e.getValue());
             }
         }
+        List<CrawlInternal> subtasks = new ArrayList();
         for (String link : result.getLinks()) {
-            new CrawlInternal(link, deadline, maxDepth - 1, counts, visitedUrls);
+            subtasks.add(new CrawlInternal(link, deadline, maxDepth - 1, counts, visitedUrls));
         }
-        return;
+        invokeAll(subtasks);
+        return (List) counts;
     }
 }

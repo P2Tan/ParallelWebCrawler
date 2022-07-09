@@ -52,16 +52,25 @@ final class ParallelWebCrawler implements WebCrawler {
     Map<String, Integer> counts = new HashMap<>();
     Set<String> visitedUrls = new HashSet<>();
     for (String url : startingUrls) {
-      new CrawlInternal(url, deadline, maxDepth, counts, visitedUrls);
+      pool.invoke(new CrawlInternal(url, deadline, maxDepth, counts, visitedUrls));
     }
 
     if (counts.isEmpty()) {
+      System.out.print(new CrawlResult.Builder()
+              .setWordCounts(counts)
+              .setUrlsVisited(visitedUrls.size())
+              .build());
+      System.out.print("sda");
       return new CrawlResult.Builder()
               .setWordCounts(counts)
               .setUrlsVisited(visitedUrls.size())
               .build();
     }
-
+    System.out.print(new CrawlResult.Builder()
+            .setWordCounts(WordCounts.sort(counts, popularWordCount))
+            .setUrlsVisited(visitedUrls.size())
+            .build());
+    System.out.print("sdf");
     return new CrawlResult.Builder()
             .setWordCounts(WordCounts.sort(counts, popularWordCount))
             .setUrlsVisited(visitedUrls.size())

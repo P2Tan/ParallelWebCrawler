@@ -130,9 +130,9 @@ public final class WebCrawlerTest {
     Guice.createInjector(new WebCrawlerModule(config), new NoOpProfilerModule())
         .injectMembers(this);
     assertThat(crawler.getClass()).isAssignableTo(crawlerClass);
-
+    System.out.print("HERE");
     CrawlResult result = crawler.crawl(config.getStartPages());
-
+  System.out.print(result);
     assertWithMessage("Returned the wrong number of popular words")
         .that(result.getUrlsVisited())
         .isEqualTo(3);
