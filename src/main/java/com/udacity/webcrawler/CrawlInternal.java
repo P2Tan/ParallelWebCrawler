@@ -1,17 +1,21 @@
 package com.udacity.webcrawler;
 
+import com.sun.jdi.Value;
 import com.udacity.webcrawler.parser.PageParser;
 import com.udacity.webcrawler.parser.PageParserFactory;
 
+import javax.inject.Inject;
+import javax.print.attribute.HashPrintJobAttributeSet;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.regex.Pattern;
 
-public class CrawlInternal extends RecursiveTask<List> {
+public class CrawlInternal extends RecursiveTask<ConcurrentHashMap> {
     private Set<String> visitedUrls;
     private Instant deadline;
     private Clock clock;
@@ -22,31 +26,39 @@ public class CrawlInternal extends RecursiveTask<List> {
     private List<Pattern> ignoredUrls;
     private String url;
     private Map<String, Integer> counts;
-    public CrawlInternal(
+    @Inject
+    CrawlInternal(
+            Clock clock,
             String url,
             Instant deadline,
             int maxDepth,
             Map<String, Integer> counts,
-            Set<String> visitedUrls) {
+            Set<String> visitedUrls,
+            List<Pattern>ignoredUrls,
+            PageParserFactory parserFactory) {
+        this.clock=clock;
         this.deadline=deadline;
         this.url=url;
         this.counts=counts;
         this.visitedUrls=visitedUrls;
         this.maxDepth = maxDepth;
+        this.ignoredUrls=ignoredUrls;
+        this.parserFactory=parserFactory;
     }
     @Override
-    protected List compute() {
+    protected ConcurrentHashMap compute() {
         Set<String> visitedUrls = new HashSet<>();
         if (maxDepth == 0 || clock.instant().isAfter(deadline)) {
-            return (List) counts;
+            return (ConcurrentHashMap) counts;
         }
+        System.out.println(ignoredUrls);
         for (Pattern pattern : ignoredUrls) {
             if (pattern.matcher(url).matches()) {
-                return (List) counts;
+                return (ConcurrentHashMap) counts;
             }
         }
         if (visitedUrls.contains(url)) {
-            return (List) counts;
+            return (ConcurrentHashMap) counts;
         }
         visitedUrls.add(url);
         PageParser.Result result = parserFactory.get(url).parse();
@@ -58,10 +70,13 @@ public class CrawlInternal extends RecursiveTask<List> {
             }
         }
         List<CrawlInternal> subtasks = new ArrayList();
+        System.out.println("Round 1.4");
+        System.out.println(Arrays.toString(result.getLinks().toArray()));
         for (String link : result.getLinks()) {
-            subtasks.add(new CrawlInternal(link, deadline, maxDepth - 1, counts, visitedUrls));
+            System.out.println("Round 2");
+            subtasks.add(new CrawlInternal(clock,link, deadline, maxDepth - 1, counts, visitedUrls,ignoredUrls,parserFactory));
         }
         invokeAll(subtasks);
-        return (List) counts;
+        return (ConcurrentHashMap) counts;
     }
 }

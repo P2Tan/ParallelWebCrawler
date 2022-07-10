@@ -4,8 +4,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -29,9 +32,13 @@ public final class ConfigurationLoader {
    * @return the loaded {@link CrawlerConfiguration}.
    */
   public CrawlerConfiguration load() {
-    // TODO: Fill in this method.
-
-    return new CrawlerConfiguration.Builder().build();
+    try {
+      BufferedReader bufferedReader =  Files.newBufferedReader(path, StandardCharsets.UTF_8);
+      return read(bufferedReader);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return null;
+    }
   }
 
   /**

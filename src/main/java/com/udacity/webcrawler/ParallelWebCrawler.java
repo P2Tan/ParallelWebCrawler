@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
@@ -49,28 +50,18 @@ final class ParallelWebCrawler implements WebCrawler {
   @Override
   public CrawlResult crawl(List<String> startingUrls) {
     Instant deadline = clock.instant().plus(timeout);
-    Map<String, Integer> counts = new HashMap<>();
-    Set<String> visitedUrls = new HashSet<>();
+    ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<>();
+    ConcurrentSkipListSet<String> visitedUrls = new ConcurrentSkipListSet<>();
     for (String url : startingUrls) {
-      pool.invoke(new CrawlInternal(url, deadline, maxDepth, counts, visitedUrls));
+      pool.invoke(new CrawlInternal(clock, url, deadline, maxDepth, counts, visitedUrls, ignoredUrls,parserFactory));
     }
 
     if (counts.isEmpty()) {
-      System.out.print(new CrawlResult.Builder()
-              .setWordCounts(counts)
-              .setUrlsVisited(visitedUrls.size())
-              .build());
-      System.out.print("sda");
       return new CrawlResult.Builder()
               .setWordCounts(counts)
               .setUrlsVisited(visitedUrls.size())
               .build();
     }
-    System.out.print(new CrawlResult.Builder()
-            .setWordCounts(WordCounts.sort(counts, popularWordCount))
-            .setUrlsVisited(visitedUrls.size())
-            .build());
-    System.out.print("sdf");
     return new CrawlResult.Builder()
             .setWordCounts(WordCounts.sort(counts, popularWordCount))
             .setUrlsVisited(visitedUrls.size())
