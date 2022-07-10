@@ -50,10 +50,17 @@ final class ParallelWebCrawler implements WebCrawler {
   @Override
   public CrawlResult crawl(List<String> startingUrls) {
     Instant deadline = clock.instant().plus(timeout);
+    //Map<String, Integer> counts = Collections.synchronizedMap(new HashMap<>());
+    //ConcurrentSkipListSet<String> visitedUrls = new ConcurrentSkipListSet<>();
     ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<>();
     ConcurrentSkipListSet<String> visitedUrls = new ConcurrentSkipListSet<>();
     for (String url : startingUrls) {
-      pool.invoke(new CrawlInternal(clock, url, deadline, maxDepth, counts, visitedUrls, ignoredUrls,parserFactory));
+      CrawlInternalHelper crawlInternalHelper=pool.invoke(new CrawlInternal(clock, url, deadline, maxDepth, counts, visitedUrls, ignoredUrls,parserFactory));
+      counts.putAll(crawlInternalHelper.getCounts());
+      System.out.println(crawlInternalHelper.getCounts());
+      System.out.println(crawlInternalHelper.getVisitedUrls());
+      System.out.println(counts);
+      System.out.println(visitedUrls);
     }
 
     if (counts.isEmpty()) {
@@ -67,6 +74,8 @@ final class ParallelWebCrawler implements WebCrawler {
             .setUrlsVisited(visitedUrls.size())
             .build();
   }
+
+
 
 
 

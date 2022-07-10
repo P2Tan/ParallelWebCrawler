@@ -131,7 +131,7 @@ public final class WebCrawlerTest {
         .injectMembers(this);
     assertThat(crawler.getClass()).isAssignableTo(crawlerClass);
     CrawlResult result = crawler.crawl(config.getStartPages());
-    System.out.println(result.getWordCounts());
+    System.out.println(result.getWordCounts()+"potato");
     System.out.println(result.getUrlsVisited());
     assertWithMessage("Returned the wrong number of popular words")
         .that(result.getUrlsVisited())
