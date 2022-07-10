@@ -10,9 +10,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -50,19 +48,12 @@ final class ParallelWebCrawler implements WebCrawler {
   @Override
   public CrawlResult crawl(List<String> startingUrls) {
     Instant deadline = clock.instant().plus(timeout);
-    //Map<String, Integer> counts = Collections.synchronizedMap(new HashMap<>());
-    //ConcurrentSkipListSet<String> visitedUrls = new ConcurrentSkipListSet<>();
-    ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<>();
+    ConcurrentMap<String, Integer> counts = new ConcurrentHashMap<>();
     ConcurrentSkipListSet<String> visitedUrls = new ConcurrentSkipListSet<>();
     for (String url : startingUrls) {
-      CrawlInternalHelper crawlInternalHelper=pool.invoke(new CrawlInternal(clock, url, deadline, maxDepth, counts, visitedUrls, ignoredUrls,parserFactory));
-      counts.putAll(crawlInternalHelper.getCounts());
-      System.out.println(crawlInternalHelper.getCounts());
-      System.out.println(crawlInternalHelper.getVisitedUrls());
-      System.out.println(counts);
-      System.out.println(visitedUrls);
+      pool.invoke(new CrawlInternal(url, deadline, maxDepth, counts, visitedUrls));
     }
-
+    System.out.println("potato"+visitedUrls);
     if (counts.isEmpty()) {
       return new CrawlResult.Builder()
               .setWordCounts(counts)
@@ -75,7 +66,51 @@ final class ParallelWebCrawler implements WebCrawler {
             .build();
   }
 
+  public class CrawlInternal extends RecursiveAction {
+    private String url;
+    private Instant deadline;
+    private int maxDepth;
+    private ConcurrentMap<String, Integer> counts;
+    private ConcurrentSkipListSet<String> visitedUrls;
 
+    public CrawlInternal(String url, Instant deadline, int maxDepth, ConcurrentMap<String, Integer> counts, ConcurrentSkipListSet<String> visitedUrls) {
+      this.url = url;
+      this.deadline = deadline;
+      this.maxDepth = maxDepth;
+      this.counts = counts;
+      this.visitedUrls = visitedUrls;
+    }
+
+    @Override
+    protected void compute() {
+      if (maxDepth == 0 || clock.instant().isAfter(deadline)) {
+        return ;
+      }
+      for (Pattern pattern : ignoredUrls) {
+        if (pattern.matcher(url).matches()) {
+          return ;
+        }
+      }
+      if (visitedUrls.contains(url)) {
+        return ;
+      }
+      visitedUrls.add(url);
+      PageParser.Result result = parserFactory.get(url).parse();
+      for (Map.Entry<String, Integer> e : result.getWordCounts().entrySet()) {
+        if (counts.containsKey(e.getKey())) {
+          counts.put(e.getKey(), e.getValue() + counts.get(e.getKey()));
+        } else {
+          counts.put(e.getKey(), e.getValue());
+        }
+      }
+      List<CrawlInternal> subtasks = new ArrayList<>();
+      for (String link : result.getLinks()) {
+        subtasks.add(new CrawlInternal(link, deadline, maxDepth -1, counts, visitedUrls));
+      }
+      invokeAll(subtasks);
+      return ;
+    }
+  }
 
 
 
