@@ -223,7 +223,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getParallelism()}.
      */
-    @JsonProperty("setParallelism")
+    @JsonProperty("parallelism")
     public Builder setParallelism(int parallelism) {
       this.parallelism = parallelism;
       return this;
@@ -234,7 +234,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getImplementationOverride()}.
      */
-    @JsonProperty("setImplementationOverride")
+    @JsonProperty("implementationOverride")
     public Builder setImplementationOverride(String implementationOverride) {
       this.implementationOverride = Objects.requireNonNull(implementationOverride);
       return this;
@@ -244,7 +244,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getMaxDepth()}.
      */
-    @JsonProperty("setMaxDepth")
+    @JsonProperty("maxDepth")
     public Builder setMaxDepth(int maxDepth) {
       this.maxDepth = maxDepth;
       return this;
@@ -254,7 +254,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getTimeout()}.
      */
-    @JsonProperty("setTimeoutSeconds")
+    @JsonProperty("timeoutSeconds")
 
     public Builder setTimeoutSeconds(int seconds) {
       this.timeoutSeconds = seconds;
@@ -265,7 +265,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getPopularWordCount()}.
      */
-    @JsonProperty("setPopularWordCount")
+    @JsonProperty("popularWordCount")
     public Builder setPopularWordCount(int popularWordCount) {
       this.popularWordCount = popularWordCount;
       return this;
@@ -275,7 +275,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getProfileOutputPath()}.
      */
-    @JsonProperty("setProfileOutputPath")
+    @JsonProperty("profileOutputPath")
     public Builder setProfileOutputPath(String profileOutputPath) {
       this.profileOutputPath = Objects.requireNonNull(profileOutputPath);
       return this;
@@ -285,7 +285,7 @@ public final class CrawlerConfiguration {
      *
      * <p>See {@link #getResultPath()}.
      */
-    @JsonProperty("setResultPath")
+    @JsonProperty("resultPath")
     public Builder setResultPath(String resultPath) {
       this.resultPath = Objects.requireNonNull(resultPath);
       return this;

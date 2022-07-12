@@ -27,15 +27,10 @@ public final class CrawlResultWriter {
    * @param path the file path where the crawl result data should be written.
    */
   public void write(Path path) {
-    // This is here to get rid of the unused variable warning.
     Objects.requireNonNull(path);
-    // Try to write the path to the writer
     try (Writer writer = Files.newBufferedWriter(path)){
-      // write to the writer
       write(writer);
-      // catch any errors that pop up
     } catch (IOException e) {
-      // print the call stack if there is an error
       e.printStackTrace();
     }
   }

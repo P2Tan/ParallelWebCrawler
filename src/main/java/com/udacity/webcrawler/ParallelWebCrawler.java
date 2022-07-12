@@ -51,7 +51,6 @@ final class ParallelWebCrawler implements WebCrawler {
     for (String url : startingUrls) {
       pool.invoke(new CrawlInternal(url, deadline, maxDepth, counts, visitedUrls));
     }
-    System.out.println("potato"+visitedUrls);
     if (counts.isEmpty()) {
       return new CrawlResult.Builder()
               .setWordCounts(counts)
